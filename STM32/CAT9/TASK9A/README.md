@@ -1,40 +1,113 @@
-# EXPERIMENT DETAILS
+# CAT9A – STM32 UART Communication and Character Echo
 
-**EXP:** CONTINUOUS ASSESSMENT 9 (CAT9)
+## Experiment Details
 
-**DATE:** 28/09/2026
+- **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
+- **Assessment:** Continuous Assessment 9A (CAT9)
+- **Date:** 28/09/2026
+- **Experiment:** STM32 UART Command Controlled LED – Basic UART Communication and Character Echo
+- **Board:** STM32 Blue Pill (STM32F103C8T6)
+- **IDE:** STM32CubeMX and Keil MDK-ARM
+- **Communication Interface:** USART1
+- **Terminal:** PuTTY
+- **Baud Rate:** 115200
 
-**NAME OF EXP:** STM32 UART Command Controlled LED
+## 1. Aim
 
-**HARDWARE SETUP / PLATFORM:** CubeMX + Keil MDK + STM32F103C8T6 + USB-TTL + PuTTY
+To establish bidirectional UART communication between the STM32 microcontroller and a PC using a USB-to-TTL converter, transmit a startup message and echo every received character back to the terminal.
 
----
+## 2. Hardware Requirements
 
-## TASK 9A : Basic UART Communication & Character Echo
+- STM32 Blue Pill (STM32F103C8T6)
+- USB-to-TTL converter
+- USB cable
+- Jumper wires
+- PC with PuTTY terminal software
 
-### 1. Hardware Setup & Circuit Diagram
+## 3. Hardware Connections
 
-- Blue Pill `STM32F103C8T6`
-- `USART1`: `PA9` (TX) -> USB-TTL `RXD`, `PA10` (RX) <- USB-TTL `TXD`, `115200-8-N-1`
+| STM32 Pin | USB-to-TTL Pin | Function |
+|---|---|---|
+| PA9 (USART1_TX) | RXD | STM32 transmission |
+| PA10 (USART1_RX) | TXD | STM32 reception |
+| GND | GND | Common ground |
 
-![Circuit Diagram](circuit.png)
+### UART Configuration
 
-### 2. Core Logic / Pseudocode / Code Base
+| Parameter | Configuration |
+|---|---|
+| Peripheral | USART1 |
+| Baud Rate | 115200 |
+| Data Bits | 8 |
+| Parity | None |
+| Stop Bits | 1 |
+| Mode | Transmit and Receive |
 
-**Working Principle:**
+## 4. Circuit Diagram
 
-Initializes `USART1` at 115200-8-N-1, transmits `HELLO\r\nWORLD\r\n` to demonstrate Carriage Return (`\r`) + Line Feed (`\n`), and echoes every received byte back to PuTTY.
+![CAT9A Circuit Diagram](circuit.png)
 
-**Pseudocode:**
+## 5. Working Principle
 
-1. Initialize `USART1` (`115200-8-N-1`).
-2. Transmit startup CR+LF test banner.
-3. Poll `HAL_UART_Receive()` and immediately transmit received byte back via `HAL_UART_Transmit()`.
+The STM32 initializes USART1 with a baud rate of 115200 and an 8-N-1 configuration.
 
-**Code Base:**
+After initialization, the firmware transmits the startup message:
 
-- `\r` returns cursor to column 0 while `\n` moves down one line; both are required for clean PuTTY line formatting.
+`HELLO\r\nWORLD\r\n`
 
-### 3. Inference
+The program then continuously checks for incoming characters from the PC using `HAL_UART_Receive()`.
 
-Verified bidirectional STM32-to-PC serial communication and confirmed why both CR and LF control characters are required in terminal emulators.
+Whenever a character is received, the same character is immediately transmitted back using `HAL_UART_Transmit()`.
+
+### Carriage Return and Line Feed
+
+- `\r` (Carriage Return) moves the terminal cursor to the beginning of the current line.
+- `\n` (Line Feed) moves the cursor to the next line.
+- Both control characters are used together for proper line formatting in PuTTY.
+
+## 6. Core Logic / Pseudocode
+
+1. Initialize the HAL library and system clock.
+2. Configure USART1 for 115200 baud, 8 data bits, no parity and 1 stop bit.
+3. Initialize UART transmission and reception.
+4. Transmit the startup message `HELLO\r\nWORLD\r\n`.
+5. Continuously wait for an incoming character using `HAL_UART_Receive()`.
+6. Store the received character.
+7. Transmit the same character back using `HAL_UART_Transmit()`.
+8. Repeat continuously.
+
+## 7. HAL Functions Used
+
+- `HAL_Init()` – Initializes the STM32 HAL library.
+- `HAL_UART_Receive()` – Receives data through USART1.
+- `HAL_UART_Transmit()` – Transmits data through USART1.
+- `HAL_RCC_OscConfig()` – Configures the system oscillator.
+- `HAL_RCC_ClockConfig()` – Configures the system clock.
+
+## 8. Expected Observation
+
+- PuTTY should display the startup message:
+
+  ```text
+  HELLO
+  WORLD
+  ```
+
+- Characters typed into PuTTY should be received by the STM32.
+- Each received character should be echoed back to the terminal.
+- Communication should operate at 115200 baud with 8-N-1 configuration.
+
+## 9. Inference
+
+The experiment demonstrates bidirectional serial communication between an STM32 microcontroller and a PC using the USART1 peripheral.
+
+Character echo confirms successful UART transmission and reception. The use of both Carriage Return and Line Feed ensures proper text formatting in terminal emulators such as PuTTY.
+
+## 10. Safety and Connection Checks
+
+- Connect STM32 TX (PA9) to converter RXD.
+- Connect STM32 RX (PA10) to converter TXD.
+- Ensure a common ground between the STM32 and USB-to-TTL converter.
+- Configure PuTTY with the correct COM port and 115200 baud rate.
+- Use compatible 3.3 V UART logic levels.
+- Do not connect the converter's 5 V output directly to STM32 GPIO pins.
