@@ -3,6 +3,7 @@
 ## Experiment Details
 - **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
 - **Experiment:** UART Initialization and Character Transmission
+- **Date:** 17/08/26
 - **Microcontroller:** AT89S52 (8051)
 - **Software:** Keil µVision
 - **Programming Language:** Embedded C
