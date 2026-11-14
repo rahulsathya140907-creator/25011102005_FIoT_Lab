@@ -2,7 +2,7 @@
 
 **EXP:** CONTINUOUS ASSESSMENT 5 (CAT5)
 
-**DATE:** 17/08/2026
+**DATE:** 10/08/2026
 
 **NAME OF EXP:** Timer and Interrupt Programming
 
