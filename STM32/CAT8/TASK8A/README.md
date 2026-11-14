@@ -1,79 +1,106 @@
-# CAT 8 — Task 8A: GPIO Input / Output
+# CAT8A – STM32 GPIO Input / Output
 
-## Experiment details
+## Experiment Details
 
-- **Course:** 25CS2741 — Fundamentals of Internet of Things + Lab
+- **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
 - **Assessment:** Continuous Lab Evaluation 8A
-- **Date on assignment:** 18/09/2026
+- **Date:** 18/09/2026
 - **Experiment:** STM32 GPIO Bring-Up and Switch-Controlled LED
 - **Board:** STM32 Blue Pill (STM32F103C8T6)
-- **IDE / framework:** STM32CubeMX, Keil MDK-ARM, STM32 HAL
+- **IDE:** STM32CubeMX and Keil MDK-ARM
+- **Framework:** STM32 HAL
 
-## Aim
+## 1. Aim
 
-Interface a push-button and an LED with the STM32 and configure GPIO so that the LED follows the switch state.
+To interface a push-button and an LED with the STM32 microcontroller and configure GPIO pins so that the LED follows the state of the push-button.
 
-## Hardware setup
+## 2. Hardware Requirements
 
-| Component / signal | Connection | Configuration |
+- STM32 Blue Pill development board
+- Normally-open push-button
+- External LED
+- 220–330 Ω current-limiting resistor
+- Breadboard and jumper wires
+- USB power supply
+
+## 3. Hardware Connections
+
+| Component | STM32 Connection |
+|---|---|
+| Push-button terminal 1 | 3.3 V |
+| Push-button terminal 2 | PA0 |
+| LED anode | PA1 through 220–330 Ω resistor |
+| LED cathode | GND |
+| Board power | USB / regulated 3.3 V |
+
+### GPIO Configuration
+
+| Pin | Mode | Configuration |
 |---|---|---|
-| Push-button SW1 | 3.3 V to PA0 when pressed | PA0 input with internal pull-down |
-| LED D1 anode | PA1 through 220–330 Ω resistor | PA1 push-pull output |
-| LED D1 cathode | GND | Common ground |
-| Board power | USB or regulated 3.3 V supply | Do not apply 5 V to a 3.3 V GPIO |
+| PA0 | GPIO Input | Internal Pull-Down |
+| PA1 | GPIO Output | Push-Pull |
 
-Use a normally-open push-button. When released, PA0 is held LOW by the internal pull-down. When pressed, PA0 reads HIGH. The external LED must have a current-limiting resistor in series.
+## 4. Circuit Diagram
 
-## Circuit diagram
+![CAT8A Circuit Diagram](circuit.png)
 
-![Task 8A circuit diagram](circuit.png)
+## 5. Working Principle
 
-## Working principle
+The STM32 GPIO peripheral is configured to read the push-button state through PA0 and control the external LED through PA1.
 
-The firmware initializes the HAL, configures the system clock, and initializes GPIOA. PA0 is configured as an input with `GPIO_PULLDOWN`; PA1 is configured as a push-pull output. The main loop continuously reads PA0 using `HAL_GPIO_ReadPin()`.
+- When the button is released, the internal pull-down keeps PA0 LOW.
+- When the button is pressed, PA0 receives 3.3 V and becomes HIGH.
+- The firmware reads PA0 using `HAL_GPIO_ReadPin()`.
+- The corresponding state is written to PA1 using `HAL_GPIO_WritePin()`.
 
-- If PA0 is HIGH (button pressed), PA1 is written HIGH and the LED turns ON.
-- If PA0 is LOW (button released), PA1 is written LOW and the LED turns OFF.
+Therefore, the LED remains ON while the button is pressed and turns OFF when the button is released.
 
-This is level-based polling: the LED mirrors the current button state.
+## 6. Core Logic / Pseudocode
 
-## Core logic / pseudocode
+1. Initialize the HAL library and system clock.
+2. Initialize GPIO peripherals.
+3. Configure PA0 as input with internal pull-down.
+4. Configure PA1 as push-pull output.
+5. Initialize the LED output to LOW.
+6. Continuously read the PA0 input state.
+7. If PA0 is HIGH, set PA1 HIGH.
+8. Otherwise, set PA1 LOW.
+9. Repeat continuously.
 
-1. Initialize HAL and system clock.
-2. Configure PA0 as input with pull-down.
-3. Configure PA1 as push-pull output and initialize it LOW.
-4. Repeatedly read PA0.
-5. If PA0 is HIGH, write HIGH to PA1.
-6. Otherwise, write LOW to PA1.
-7. Repeat continuously.
+## 7. HAL Functions Used
 
-## HAL functions used
+- `HAL_Init()` – Initializes the STM32 HAL library.
+- `HAL_GPIO_ReadPin()` – Reads the push-button input state.
+- `HAL_GPIO_WritePin()` – Controls the LED output state.
+- `HAL_RCC_OscConfig()` – Configures the system oscillator.
+- `HAL_RCC_ClockConfig()` – Configures the system clock.
 
-- `HAL_Init()` — initialize the HAL library and SysTick.
-- `HAL_GPIO_ReadPin()` — read the push-button input.
-- `HAL_GPIO_WritePin()` — set the LED output.
-- `HAL_RCC_OscConfig()` and `HAL_RCC_ClockConfig()` — configure the system clock.
+## 8. Expected Observation
 
-## Expected observation / result
+| Button State | PA0 Input | PA1 Output | LED |
+|---|---|---|---|
+| Released | LOW | LOW | OFF |
+| Pressed | HIGH | HIGH | ON |
 
-The LED should turn ON while the button is pressed and turn OFF when the button is released. Record the result observed on your own hardware before submission.
+## 9. Inference
 
-## Inference
+The experiment demonstrates digital GPIO input and output interfacing using the STM32 HAL framework. The internal pull-down resistor ensures a stable LOW input when the button is released, preventing the input pin from floating.
 
-This task demonstrates digital GPIO input and output using STM32 HAL. The internal pull-down provides a defined LOW input while the switch is open, preventing PA0 from floating. Polling the input allows the LED output to follow the switch state.
+By continuously polling the input pin and controlling the output pin, the LED successfully follows the push-button state.
 
-## Files
+## 10. Project Files
 
-- `Core/Src/main.c` — application source code.
-- `Core/Inc/main.h` — application and HAL declarations.
-- `Blinky.ioc` — STM32CubeMX configuration.
-- `MDK-ARM/Blinky.uvprojx` — Keil project.
-- `MDK-ARM/startup_stm32f103xb.s` — startup code.
-- `circuit.png` — wiring diagram.
+- `Core/Src/main.c` – Main application source code.
+- `Core/Inc/main.h` – Application header file.
+- `Blinky.ioc` – STM32CubeMX configuration.
+- `MDK-ARM/Blinky.uvprojx` – Keil project file.
+- `MDK-ARM/startup_stm32f103xb.s` – Startup assembly file.
+- `circuit.png` – Hardware circuit diagram.
 
-## Safety and wiring checks
+## 11. Safety Notes
 
-- Confirm the switch connects PA0 to **3.3 V**, not 5 V.
-- Confirm PA0 is configured with `GPIO_PULLDOWN`.
-- Use a 220–330 Ω series resistor with the external LED.
-- Check LED polarity: anode toward PA1 through the resistor; cathode toward GND.
+- Use 3.3 V for the push-button input. Do not apply 5 V to PA0.
+- Configure PA0 with an internal pull-down resistor.
+- Use a 220–330 Ω resistor in series with the external LED.
+- Verify LED polarity before powering the circuit.
+- Ensure all circuit connections share a common ground.
