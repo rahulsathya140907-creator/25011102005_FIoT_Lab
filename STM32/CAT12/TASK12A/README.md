@@ -1,40 +1,72 @@
-# EXPERIMENT DETAILS
+# CAT 12 — Task 12A: On-board LED Bring-Up
 
-**EXP:** CONTINUOUS ASSESSMENT 12 (CAT12 / 11)
+## Experiment details
 
-**DATE:** 14/10/2026
+- **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
+- **Assessment:** Continuous Assessment 12A
+- **Date:** 14/10/2026
+- **Experiment:** STM32F401RE Cortex-M4 – GPIO and User Input Programming
+- **Board:** STM32 Nucleo-F401RE (STM32F401RET6)
+- **IDE / Framework:** STM32CubeMX, Keil MDK-ARM, STM32 HAL
+- **System Clock:** 84 MHz
 
-**NAME OF EXP:** STM32F401RE Cortex-M4: GPIO and User Input Programming
+## Aim
 
-**HARDWARE SETUP / PLATFORM:** CubeMX + Keil MDK + STM32 Nucleo-F401RE (Cortex-M4 @ 84 MHz)
+Configure the onboard green LED of the STM32 Nucleo-F401RE as a GPIO output and implement periodic LED toggling to verify basic GPIO functionality.
 
----
+## Hardware setup
 
-## TASK 12A (Task 1) : On-board LED Bring-Up
+| Component / Signal | Connection | Configuration |
+|---|---|---|
+| Onboard LED LD2 | PA5 | GPIO push-pull output |
+| Board Power | USB connection | Powered through ST-LINK |
+| Programming Interface | ST-LINK | USB programming and debugging |
 
-### 1. Hardware Setup & Circuit Diagram
+The onboard green LED LD2 is connected to PA5 and operates with active-high logic. No external LED or additional wiring is required.
 
-- STM32 `NUCLEO-F401RE` (`STM32F401RET6`, LQFP64)
-- Clock: 84 MHz SYSCLK
-- Onboard LED: `PA5` (LD2, active-high)
+## Circuit diagram
 
-![Circuit Diagram](circuit.png)
+![CAT12A Circuit Diagram](circuit.png)
 
-### 2. Core Logic / Pseudocode / Code Base
+## Working principle
 
-**Working Principle:**
+The STM32 HAL initializes the microcontroller and configures the system clock to 84 MHz.
 
-Configures `PA5` as push-pull output and toggles the Nucleo-F401RE onboard green LED LD2 at a fixed 500 ms interval (`1 Hz`) to validate clock tree and GPIO output bring-up.
+GPIO pin PA5 is configured as a push-pull output to control the onboard green LED LD2.
 
-**Pseudocode:**
+The main loop continuously toggles the output state of PA5 using `HAL_GPIO_TogglePin()` with a 500 ms delay using `HAL_Delay()`.
 
-1. Initialize HAL, 84 MHz system clock, and `PA5` output.
-2. In `while(1)`, call `HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5)` and `HAL_Delay(500)`.
+This produces a continuous blinking pattern with a complete ON-OFF cycle every second.
 
-**Code Base:**
+## Core logic / pseudocode
 
-- Matches CubeMX `LED_TOGGLE_F401RE` configuration for `STM32F401RET6`.
+1. Initialize the STM32 HAL library.
+2. Configure the system clock to 84 MHz.
+3. Initialize GPIOA.
+4. Configure PA5 as a push-pull output.
+5. Enter the infinite loop.
+6. Toggle PA5 using `HAL_GPIO_TogglePin()`.
+7. Introduce a 500 ms delay using `HAL_Delay(500)`.
+8. Repeat continuously.
 
-### 3. Inference
+## HAL functions used
 
-LD2 on `PA5` blinks steadily at 1 Hz, verifying ST-LINK flashing, 84 MHz PLL configuration, and Cortex-M4 GPIO control.
+- `HAL_Init()` — Initialize the STM32 HAL library.
+- `HAL_GPIO_Init()` — Configure GPIO pin PA5.
+- `HAL_GPIO_TogglePin()` — Toggle the onboard LED.
+- `HAL_Delay()` — Generate a 500 ms delay.
+- `HAL_RCC_OscConfig()` — Configure the system oscillator.
+- `HAL_RCC_ClockConfig()` — Configure the system clock.
+
+## Expected observation / result
+
+- The onboard green LED LD2 should turn ON.
+- After 500 ms, the LED should turn OFF.
+- The LED should continue blinking at a steady rate.
+- One complete ON-OFF cycle should take approximately one second.
+
+## Inference
+
+This experiment demonstrates basic GPIO output configuration and control using STM32 HAL on the Cortex-M4 microcontroller.
+
+Successful blinking of LD2 verifies the GPIO configuration, system clock setup
