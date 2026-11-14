@@ -21,8 +21,7 @@ TASK NO
 2. Bare-Metal LED Blink
 3. Custom library function for delay functionality.
 
-CIRCUIT DIAGRAM
-circuit.png
+![Circuit Diagram](circuit.png)
 
 CORE LOGIC / PSEUDOCODE / CODE BASE
 
