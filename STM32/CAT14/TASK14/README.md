@@ -1,45 +1,174 @@
-# EXPERIMENT DETAILS
+# CAT 14 — Sensor Interfacing (BME280) – MQTT – Node-RED Analytics
 
-**EXP:** CONTINUOUS ASSESSMENT 14 (CAT14 / 13)
+## Experiment details
 
-**DATE:** 27/10/2026
+- **Course:** Fundamentals of Internet of Things + Lab
+- **Assessment:** Continuous Assessment 14
+- **Date:** 27/10/2026
+- **Experiment:** Sensor Interfacing using BME280, STM32 and MQTT
+- **Microcontroller:** STM32 NUCLEO-F401RE
+- **Sensor:** BME280 Temperature, Pressure and Humidity Sensor
+- **Wi-Fi Module:** ESP8266
+- **MQTT Broker:** broker.emqx.io
+- **Development Tools:** STM32CubeMX, Keil MDK-ARM
+- **Dashboard:** Node-RED
 
-**NAME OF EXP:** Sensor Interfacing (BME280) - (MQTT) - Node Analytics
+## Aim
 
-**HARDWARE SETUP / PLATFORM:** CubeMX + Keil MDK + STM32 Nucleo-F401RE + BME280 + ESP8266 + EMQX MQTT + Node-RED
+Interface the BME280 sensor with the STM32 Nucleo-F401RE using I2C and transmit temperature, pressure and humidity readings to an MQTT broker through the ESP8266. Use Node-RED to subscribe to the published MQTT topic and receive sensor data.
 
----
+## Hardware requirements
 
-## TASK 14 : BME280 Sensor Interfacing Using I2C and MQTT using Custom Built ESP8266 API
+- STM32 NUCLEO-F401RE development board
+- BME280 I2C sensor module
+- ESP8266 Wi-Fi module (Wemos D1 Mini)
+- USB cables for powering the development board and ESP8266
+- Computer with STM32CubeMX, Keil MDK-ARM and Node-RED
 
-### 1. Hardware Setup & Circuit Diagram
+## Hardware connections
 
-- STM32 `NUCLEO-F401RE`
-- BME280 on `I2C1` (`PB8/PB9`, `0x76`)
-- ESP8266 on `USART2` (`PA2/PA3`)
-- MQTT Broker `broker.emqx.io:1883` -> Node-RED `mqtt in`
+| Component | Pin | STM32 Connection |
+|---|---|---|
+| BME280 | VCC | 3.3V |
+| BME280 | GND | GND |
+| BME280 | SCL | PB8 (I2C1 SCL) |
+| BME280 | SDA | PB9 (I2C1 SDA) |
+| ESP8266 | RX | PA2 (USART2 TX) |
+| ESP8266 | TX | PA3 (USART2 RX) |
+| ESP8266 | GND | Common GND |
 
-![Circuit Diagram](circuit.png)
+**Power and communication setup:**
+- Nucleo-F401RE is powered through its USB connection to the PC.
+- ESP8266 is powered separately through its own USB connection to the PC.
+- BME280 receives 3.3V from the Nucleo board.
+- USART2 PA2/PA3 handles UART communication between STM32 and ESP8266.
+- Ensure a common ground between the connected modules.
 
-### 2. Core Logic / Pseudocode / Code Base
+## Circuit diagram
 
-**Working Principle:**
+![CAT14 Circuit Diagram](circuit.png)
 
-Reads compensated BME280 sensor data over `I2C1`, formats the JSON payload, and publishes it over MQTT (`QoS0`) to `stm32/test/data` on `broker.emqx.io:1883` using the custom `ESPLib` driver (`ESP8266_Init`, `ESP8266_wifiConnect`, `ESP8266_portConnect`, `MQTT_connectBroker`, `MQTT_publishTopic`). `SysTick_Handler()` invokes `MQTTTimer()` every 1 ms.
+## Working principle
 
-**Pseudocode:**
+1. STM32 initializes the BME280 sensor through I2C1.
+2. The sensor provides temperature, pressure and humidity readings.
+3. STM32 reads and compensates the sensor data.
+4. The readings are formatted into a JSON payload.
+5. STM32 communicates with the ESP8266 using USART2.
+6. ESP8266 connects to the Wi-Fi network using AT commands.
+7. The ESP8266 establishes a connection to the MQTT broker `broker.emqx.io` on port `1883`.
+8. STM32 publishes the JSON sensor data using MQTT QoS 0.
+9. The data is published to the topic `stm32/test/data`.
+10. Node-RED subscribes to the same topic and receives the sensor readings.
 
-1. Initialize BME280 on `I2C1` and ESP8266 via `ESP8266_Init(StationMode, huart2)`.
-2. Join Wi-Fi and open TCP socket to `broker.emqx.io:1883`.
-3. Send MQTT `CONNECT` packet via `MQTT_connectBroker()`.
-4. Every 1 s, read BME280, construct JSON, and call `MQTT_publishTopic("stm32/test/data", json, QoS0)`.
-5. Visualize live JSON messages in Node-RED using `mqtt in`.
+## Software implementation
 
-**Code Base:**
+### BME280 sensor interfacing
 
-- Custom `ESPLib.h` / `ESPLib.c` implements AT transport + MQTT 3.1.1 CONNECT/PUBLISH/SUBSCRIBE packet framing.
-- `stm32f4xx_it.c` calls `MQTTTimer()` inside `SysTick_Handler()`.
+- BME280 communicates with STM32 through I2C1.
+- I2C pins:
+  - PB8 – SCL
+  - PB9 – SDA
+- Sensor I2C address: `0x76`.
+- Temperature, pressure and humidity readings are acquired and compensated using the sensor data.
 
-### 3. Inference
+### ESP8266 communication
 
-Replacing HTTP polling with lightweight MQTT publish/subscribe decouples the STM32 sensor node from Node-RED and lowers network overhead.
+A custom ESP8266 library, `ESPLib`, is used to handle communication through AT commands.
+
+Important functions include:
+
+- `ESP8266_Init()` — Initialize ESP8266 communication.
+- `ESP8266_wifiConnect()` — Connect to the Wi-Fi network.
+- `ESP8266_portConnect()` — Establish the broker connection.
+
+### MQTT implementation
+
+The custom `ESPLib` implements MQTT 3.1.1 packet handling.
+
+Important functions include:
+
+- `MQTT_connectBroker()` — Establish an MQTT connection.
+- `MQTT_publishTopic()` — Publish sensor data to an MQTT topic.
+- `MQTTTimer()` — Maintain MQTT timing operations.
+
+**MQTT configuration:**
+
+| Parameter | Value |
+|---|---|
+| Broker | `broker.emqx.io` |
+| Port | `1883` |
+| Protocol | MQTT 3.1.1 |
+| QoS | 0 |
+| Topic | `stm32/test/data` |
+| Payload | JSON sensor readings |
+
+The `SysTick_Handler()` invokes `MQTTTimer()` every 1 ms to maintain MQTT timing.
+
+### Node-RED integration
+
+Node-RED uses an MQTT-in node to subscribe to the sensor topic.
+
+**Flow:**
+
+`MQTT Broker → MQTT In → JSON Processing → Debug / Dashboard`
+
+- Configure the broker as `broker.emqx.io`.
+- Set the port to `1883`.
+- Subscribe to `stm32/test/data`.
+- Receive and process the published JSON payload.
+
+## Core logic / pseudocode
+
+1. Initialize HAL and configure the system clock.
+2. Initialize I2C1 and USART2.
+3. Initialize the BME280 sensor.
+4. Initialize the ESP8266 using `ESP8266_Init()`.
+5. Connect ESP8266 to Wi-Fi using `ESP8266_wifiConnect()`.
+6. Connect to the MQTT broker using `MQTT_connectBroker()`.
+7. Read temperature, pressure and humidity from BME280.
+8. Format the readings into JSON.
+9. Publish the JSON payload using `MQTT_publishTopic()`.
+10. Maintain MQTT timing through `MQTTTimer()` called every 1 ms.
+11. Receive the published data in Node-RED through the MQTT-in node.
+12. Repeat sensor acquisition and publishing.
+
+## Expected observation / result
+
+- BME280 successfully communicates with STM32 through I2C.
+- Temperature, pressure and humidity readings are acquired.
+- ESP8266 successfully connects to the Wi-Fi network.
+- STM32 establishes an MQTT connection through ESP8266.
+- JSON sensor readings are published to `stm32/test/data`.
+- Node-RED receives the published sensor data through its MQTT-in node.
+
+## Inference
+
+This experiment demonstrates environmental sensor interfacing, UART-based ESP8266 communication and MQTT-based IoT data transmission.
+
+The integration of STM32, BME280, ESP8266 and Node-RED demonstrates how sensor data can be acquired, published to a remote MQTT broker and received by an IoT dashboard.
+
+## Files
+
+- `Core/Src/main.c` — Main application logic.
+- `Core/Inc/main.h` — Application declarations.
+- `ESPLib.c` — ESP8266 communication and MQTT implementation.
+- `ESPLib.h` — ESP8266 and MQTT function declarations.
+- `bme280.c` — BME280 sensor implementation.
+- `bme280.h` — BME280 API declarations.
+- `bme280_defs.h` — Sensor register and configuration definitions.
+- `*.ioc` — STM32CubeMX configuration.
+- `MDK-ARM/*.uvprojx` — Keil project file.
+- `circuit.png` — Hardware connection diagram.
+
+## Safety and configuration checks
+
+- Use 3.3V-compatible logic for the BME280 and ESP8266.
+- Verify the BME280 I2C address is `0x76`.
+- Cross-connect USART2 TX and RX correctly.
+- Ensure common ground between STM32, BME280 and ESP8266.
+- Power the Nucleo board and ESP8266 through their separate USB connections.
+- Verify Wi-Fi connectivity before testing MQTT.
+- Ensure Node-RED subscribes to the exact topic `stm32/test/data`.
+- Confirm the MQTT broker address and port are correct.
+- 
