@@ -2,7 +2,7 @@
 
 **EXP:** CONTINUOUS ASSESSMENT 7 (CAT7)
 
-**DATE:** 17/08/2026
+**DATE:** 24/08/2026
 
 **NAME OF EXP:** LCD Interfacing and Display Control
 
